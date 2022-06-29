@@ -1,7 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:todos/widgets/detail.dart';
 import 'add.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -11,19 +13,30 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   var todos = [
-    {
-      "name": "Dinner",
-      "place": "Horizon Garden",
-      "desc": "Budget under 100 for 3 ppl"
-    },
-    {
-      "name": "Play PS5",
-      "place": "Office",
-      "desc": "Play Fifa, WWE and Just Dance"
-    },
-    {"name": "Study pdf", "place": "Home", "desc": "Study chapter 2 and 3"},
-    {"name": "Fix bug", "place": "office", "desc": "Fix bugs with developers"}
+
   ];
+
+  // When the page is loaded do the following...
+ @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadData();
+
+  }
+
+   void loadData() async {
+   final SharedPreferences prefs = await SharedPreferences.getInstance();
+   var todoTemp = prefs.getString("todos");
+   print(todoTemp);
+   if (todoTemp != null){
+     setState((){
+       // Transform String to Map
+       todos = jsonDecode(todoTemp);
+     });
+   }
+   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,8 +47,14 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () async {
                   final result = await Navigator.push(context,
                       MaterialPageRoute(builder: (context) => AddPage()));
+                  todos.add(result);
+                  final SharedPreferences prefs = await SharedPreferences.getInstance();
+                  // Save -> nama file "todos", todos
+                  // todos is an Array of Map -> cannot save it directly
+                  // Transform Array of Map to String (jsonEncode)
+                  prefs.setString("todos", jsonEncode(todos));
                   setState(() {
-                    todos.add(result);
+                    todos;
                   });
                 },
                 icon: Icon(Icons.add))
